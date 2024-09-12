@@ -70,7 +70,7 @@ int connectRemoteServer(const char *host_addr, int port_num)
     bzero((char *)&server_addr, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(port_num);
-    bcopy((char *)&host->h_addr, (char *)&server_addr.sin_addr.s_addr, host->h_length);
+    bcopy((char *)&host->h_addr_list[0], (char *)&server_addr.sin_addr.s_addr, host->h_length);
 
     if (connect(remote_socket, (struct sockaddr *)&server_addr, (size_t)sizeof(server_addr) < 0))
     {
@@ -80,7 +80,7 @@ int connectRemoteServer(const char *host_addr, int port_num)
     return remote_socket;
 }
 
-int handle_request(int client_socket_id, ParsedRequest *request, std::string &buff)
+int handle_request(int client_socket_id, struct ParsedRequest *request, std::string &buff)
 {
     char *buffer = (char *)malloc(sizeof(char) * BUFFER_SIZE);
     strcpy(buffer, "GET ");
@@ -247,7 +247,7 @@ void *thread_fn(void *sckt)
     }
     else if (client_bytes_sent > 0)
     {
-        ParsedRequest *request = ParsedRequest_create();
+        struct ParsedRequest *request = ParsedRequest_create();
         if (ParsedRequest_parse(request, response.c_str(), response.size()) < 0)
         {
             std::cerr << "Server response failed to parse!" << std::endl;
@@ -459,10 +459,6 @@ int addCacheElement(std::string &data, int size, std::string &url)
         cache_size += element_size;
         temp_lock_val = pthread_mutex_unlock(&lock);
         std::cout << "Add Cache Lock Unlocked:" << temp_lock_val << std::endl;
-        // sem_post(&cache_lock);
-        //  free(data);
-        //  printf("--\n");
-        //  free(url);
         return 1;
     }
     return 0;
